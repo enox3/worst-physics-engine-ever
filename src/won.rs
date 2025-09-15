@@ -35,8 +35,7 @@ fn setup(
 ) {
     progression.levels[level.0] = LEVELS[level.0]
         .thresholds
-        .binary_search(&colliders.coords.len())
-        .map_or_else(|err| err, |ok| ok)
+        .binary_search(&colliders.coords.len()).unwrap_or_else(|err| err)
         .min(progression.levels[level.0]);
 
     // Common style for all buttons on the screen
