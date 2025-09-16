@@ -6,7 +6,8 @@ use bevy_ecs_ldtk::{LdtkWorldBundle, LevelSelection};
 use crate::{
     audio::AudioEvent, edit::EnabledColliders, CurrentLevel, CurrentTab, FontHandle, GameConfig,
     GameKind, GameMode, GameVariant, LdtkHandle, Progression, ACTIVE_BUTTON, ACTIVE_HOVERED_BUTTON,
-    DISABLED_BUTTON, HOVERED_BUTTON, LEVELS, NORMAL_BUTTON, PRESSED_BUTTON, TEXT_COLOR,
+    DISABLED_BUTTON, HOVERED_BUTTON, LEVELS, NORMAL_BUTTON, PRESSED_BUTTON,
+    REQUIRED_STARS_PER_VARIANT, TEXT_COLOR,
 };
 
 pub struct MenuPlugin;
@@ -21,7 +22,6 @@ impl Plugin for MenuPlugin {
             );
     }
 }
-const REQUIRED_STARS_PER_VARIANT: usize = 1;
 
 #[derive(Component)]
 struct OnMenuScreen;
@@ -129,7 +129,8 @@ fn setup(
                 })
                 .with_children(|row| {
                     for tab_index in 0..GameVariant::get_number_of_variants() {
-                        let required_stars = (REQUIRED_STARS_PER_VARIANT * tab_index)
+                        let required_stars = REQUIRED_STARS_PER_VARIANT * tab_index;
+                        let required_stars_left = required_stars
                             .checked_sub(progression.total_stars())
                             .unwrap_or(0);
                         let enabled = progression.total_stars() >= required_stars;
@@ -159,7 +160,7 @@ fn setup(
                                     format!(
                                         "{} ({})",
                                         GameVariant::get_name_by_index(tab_index),
-                                        required_stars
+                                        required_stars_left
                                     )
                                 },
                                 TextStyle {
