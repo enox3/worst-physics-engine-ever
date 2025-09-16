@@ -91,7 +91,7 @@ const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
 const ACTIVE_BUTTON: Color = Color::rgb(0.3, 0.3, 0.3);
 const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
 const ACTIVE_HOVERED_BUTTON: Color = Color::rgb(0.25, 0.15, 0.15);
-const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
+const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.35, 0.35);
 const DISABLED_BUTTON: Color = Color::rgb(0.1, 0.1, 0.1);
 
 #[derive(Resource)]

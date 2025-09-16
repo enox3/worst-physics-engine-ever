@@ -178,6 +178,39 @@ fn setup(
                     }
                 });
 
+            // Top-right: Total star counter with legend icons
+            parent
+                .spawn(NodeBundle {
+                    style: Style {
+                        position_type: PositionType::Absolute,
+                        right: Val::Px(16.0),
+                        top: Val::Px(16.0),
+                        ..default()
+                    },
+                    ..default()
+                })
+                .with_children(|row| {
+                    row.spawn(TextBundle::from_section(
+                        format!("{} ", progression.total_stars()),
+                        TextStyle {
+                            font_size: 22.0,
+                            color: TEXT_COLOR,
+                            font: font.0.clone(),
+                        },
+                    ));
+                    for (path,) in [("starGold.png",), ("starSilver.png",), ("starBronze.png",)] {
+                        row.spawn(ImageBundle {
+                            style: Style {
+                                width: Val::Px(22.0),
+                                height: Val::Px(22.0),
+                                ..default()
+                            },
+                            image: UiImage::new(asset_server.load(path)),
+                            ..default()
+                        });
+                    }
+                });
+
             // Level
             parent
                 .spawn(NodeBundle {
