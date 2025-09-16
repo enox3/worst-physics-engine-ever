@@ -1,6 +1,6 @@
 use crate::{
-    audio::AudioEvent, components::*, edit::EnabledColliders, FontHandle, GameKind, GameMode,
-    HOVERED_BUTTON, NORMAL_BUTTON, PRESSED_BUTTON, TEXT_COLOR,
+    audio::AudioEvent, components::*, edit::EnabledColliders, FontHandle, GameConfig, GameKind,
+    GameMode, HOVERED_BUTTON, NORMAL_BUTTON, PRESSED_BUTTON, TEXT_COLOR,
 };
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
@@ -72,12 +72,13 @@ fn movement(
     >,
     time: Res<Time>,
     mut audio_events: EventWriter<AudioEvent>,
+    game_config: Res<GameConfig>,
 ) {
     for (mut velocity, mut climber, ground_detection, mut atlas) in &mut query {
         let right = if input.pressed(KeyCode::D) { 1. } else { 0. };
         let left = if input.pressed(KeyCode::A) { 1. } else { 0. };
 
-        velocity.linvel.x = (right - left) * 200.;
+        velocity.linvel.x = (right - left) * 200. * game_config.movement_speed;
 
         if velocity.linvel.x != 0.0 {
             atlas.index = ((time.elapsed_seconds() * 15.0).floor() as usize) % 6 + 7;

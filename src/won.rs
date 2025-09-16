@@ -2,8 +2,8 @@ use bevy::prelude::*;
 use bevy_ecs_ldtk::assets::LdtkProject;
 
 use crate::{
-    audio::AudioEvent, edit::EnabledColliders, CurrentLevel, FontHandle, GameMode, Progression,
-    HOVERED_BUTTON, LEVELS, NORMAL_BUTTON, PRESSED_BUTTON, TEXT_COLOR,
+    audio::AudioEvent, edit::EnabledColliders, CurrentLevel, CurrentTab, FontHandle, GameMode,
+    Progression, HOVERED_BUTTON, LEVELS, NORMAL_BUTTON, PRESSED_BUTTON, TEXT_COLOR,
 };
 
 pub struct WonPlugin;
@@ -32,12 +32,13 @@ fn setup(
     mut progression: ResMut<Progression>,
     level: Res<CurrentLevel>,
     asset_server: Res<AssetServer>,
+    current_tab: Res<CurrentTab>,
 ) {
-    progression.levels[level.0] = LEVELS[level.0]
+    progression.tabs[current_tab.0][level.0] = LEVELS[level.0]
         .thresholds
         .binary_search(&colliders.coords.len())
         .unwrap_or_else(|err| err)
-        .min(progression.levels[level.0]);
+        .min(progression.tabs[current_tab.0][level.0]);
 
     // Common style for all buttons on the screen
     let button_style = Style {
@@ -152,11 +153,13 @@ fn setup(
                             ..default()
                         },
                         image: UiImage::new(asset_server.load("starBronze.png")),
-                        background_color: BackgroundColor(if progression.levels[level.0] < 3 {
-                            Color::WHITE
-                        } else {
-                            Color::GRAY
-                        }),
+                        background_color: BackgroundColor(
+                            if progression.tabs[current_tab.0][level.0] < 3 {
+                                Color::WHITE
+                            } else {
+                                Color::GRAY
+                            },
+                        ),
                         ..default()
                     });
                     parent.spawn(ImageBundle {
@@ -169,11 +172,13 @@ fn setup(
                             ..default()
                         },
                         image: UiImage::new(asset_server.load("starSilver.png")),
-                        background_color: BackgroundColor(if progression.levels[level.0] < 2 {
-                            Color::WHITE
-                        } else {
-                            Color::GRAY
-                        }),
+                        background_color: BackgroundColor(
+                            if progression.tabs[current_tab.0][level.0] < 2 {
+                                Color::WHITE
+                            } else {
+                                Color::GRAY
+                            },
+                        ),
                         ..default()
                     });
                     parent.spawn(ImageBundle {
@@ -186,11 +191,13 @@ fn setup(
                             ..default()
                         },
                         image: UiImage::new(asset_server.load("starGold.png")),
-                        background_color: BackgroundColor(if progression.levels[level.0] < 1 {
-                            Color::WHITE
-                        } else {
-                            Color::GRAY
-                        }),
+                        background_color: BackgroundColor(
+                            if progression.tabs[current_tab.0][level.0] < 1 {
+                                Color::WHITE
+                            } else {
+                                Color::GRAY
+                            },
+                        ),
                         ..default()
                     });
                 });
