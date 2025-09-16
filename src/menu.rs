@@ -130,9 +130,8 @@ fn setup(
                 .with_children(|row| {
                     for tab_index in 0..GameVariant::get_number_of_variants() {
                         let required_stars = REQUIRED_STARS_PER_VARIANT * tab_index;
-                        let required_stars_left = required_stars
-                            .checked_sub(progression.total_stars())
-                            .unwrap_or(0);
+                        let required_stars_left =
+                            required_stars.saturating_sub(progression.total_stars());
                         let enabled = progression.total_stars() >= required_stars;
                         let mut button = row.spawn(ButtonBundle {
                             style: Style {
@@ -283,7 +282,7 @@ enum ButtonAction {
     SelectTab(usize),
 }
 
-#[allow(clippy::type_complexity)]
+#[allow(clippy::type_complexity, clippy::too_many_arguments)]
 fn button_system(
     mut commands: Commands,
     mut interaction_query: Query<

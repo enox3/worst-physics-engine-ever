@@ -263,7 +263,7 @@ impl Progression {
         Progression::stars_for_levels(&self.tabs[tab_index])
     }
 
-    fn stars_for_levels(levels: &Vec<usize>) -> usize {
+    fn stars_for_levels(levels: &[usize]) -> usize {
         levels
             .iter()
             .filter_map(|v| match *v {
