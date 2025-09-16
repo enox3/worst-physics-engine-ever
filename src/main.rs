@@ -1,5 +1,6 @@
 use aabb_picking_backend::AabbPickingBackend;
 use bevy::prelude::*;
+use std::ops::Deref;
 
 use bevy_ecs_ldtk::prelude::*;
 use bevy_embedded_assets::EmbeddedAssetPlugin;
@@ -87,7 +88,9 @@ enum GameMode {
 
 const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
+const ACTIVE_BUTTON: Color = Color::rgb(0.3, 0.3, 0.3);
 const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
+const ACTIVE_HOVERED_BUTTON: Color = Color::rgb(0.25, 0.15, 0.15);
 const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
 const DISABLED_BUTTON: Color = Color::rgb(0.1, 0.1, 0.1);
 
@@ -120,7 +123,20 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         levels
     };
 
-    commands.insert_resource(Progression { levels });
+    commands.insert_resource(Progression {
+        tabs: [
+            levels.clone(),
+            levels.clone(),
+            levels.clone(),
+            levels.clone(),
+            levels.clone(),
+            levels.clone(),
+            levels.clone(),
+            levels.clone(),
+        ],
+    });
+    commands.insert_resource(CurrentTab(0));
+    commands.insert_resource(GameConfig::default());
 }
 
 #[derive(Resource, Clone)]
@@ -163,10 +179,117 @@ const LEVELS: [LevelInfo; 6] = [
     },
 ];
 
+const NUM_OF_VARIANTS: usize = 8;
+
 #[derive(Resource)]
 struct CurrentLevel(usize);
 
-#[derive(Resource)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum GameVariant {
+    Normal,
+    Iced,
+    BreakingColliders,
+    Mirrored,
+    Windy,
+    TiltMode,
+    RandomProgression,
+    Random,
+}
+
+impl GameVariant {
+    pub fn get_config(&self) -> GameConfig {
+        match self {
+            GameVariant::Normal => GameConfig { movement_speed: 1. },
+            GameVariant::Iced => GameConfig { movement_speed: 2. },
+            GameVariant::BreakingColliders => GameConfig { movement_speed: 3. },
+            GameVariant::Mirrored => GameConfig { movement_speed: 4. },
+            GameVariant::Windy => GameConfig { movement_speed: 5. },
+            GameVariant::TiltMode => GameConfig { movement_speed: 1. },
+            GameVariant::RandomProgression => GameConfig { movement_speed: 1. },
+            GameVariant::Random => GameConfig { movement_speed: 1. },
+        }
+    }
+    pub fn get_config_by_index(index: usize) -> GameConfig {
+        Self::get_variant_by_index(index).get_config()
+    }
+    pub fn get_variant_by_index(index: usize) -> Self {
+        match index {
+            0 => GameVariant::Normal,
+            1 => GameVariant::Iced,
+            2 => GameVariant::BreakingColliders,
+            3 => GameVariant::Mirrored,
+            4 => GameVariant::Windy,
+            5 => GameVariant::TiltMode,
+            6 => GameVariant::RandomProgression,
+            7 => GameVariant::Random,
+            _ => GameVariant::Normal,
+        }
+    }
+    pub fn get_name_by_index(index: usize) -> String {
+        match index {
+            0 => "Normal",
+            1 => "Iced",
+            2 => "Break",
+            3 => "Mirror",
+            4 => "Wind",
+            5 => "Tilt",
+            6 => "RandProg",
+            7 => "Rand",
+            _ => "Normal",
+        }
+        .into()
+    }
+    pub fn get_number_of_variants() -> usize {
+        // std::mem::variant_count::<Self>()
+        NUM_OF_VARIANTS
+    }
+}
+
+#[derive(Resource, Clone)]
 pub struct Progression {
-    pub levels: Vec<usize>,
+    pub tabs: [Vec<usize>; NUM_OF_VARIANTS],
+}
+impl Progression {
+    pub fn total_stars(&self) -> usize {
+        self.tabs
+            .iter()
+            .map(|levels| Progression::stars_for_levels(levels))
+            .sum()
+    }
+
+    pub fn total_stars_for_tab(&self, tab_index: usize) -> usize {
+        Progression::stars_for_levels(&self.tabs[tab_index])
+    }
+
+    fn stars_for_levels(levels: &Vec<usize>) -> usize {
+        levels
+            .iter()
+            .filter_map(|v| match *v {
+                0 => Some(3usize),
+                1 => Some(2usize),
+                2 => Some(1usize),
+                _ => None,
+            })
+            .sum()
+    }
+}
+
+#[derive(Resource)]
+pub struct GameConfig {
+    pub movement_speed: f32,
+}
+impl Default for GameConfig {
+    fn default() -> Self {
+        GameConfig { movement_speed: 1. }
+    }
+}
+
+#[derive(Resource, Clone, Copy, Debug, Eq, PartialEq)]
+pub struct CurrentTab(pub usize);
+
+impl Deref for CurrentTab {
+    type Target = usize;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
