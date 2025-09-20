@@ -78,9 +78,11 @@ fn movement(
         let right = if input.pressed(KeyCode::D) { 1. } else { 0. };
         let left = if input.pressed(KeyCode::A) { 1. } else { 0. };
 
-        velocity.linvel.x = (right - left) * 200. * game_config.movement_speed;
+        let direction = right - left;
 
-        if velocity.linvel.x != 0.0 {
+        velocity.linvel.x = game_config.calculate_speed(direction, velocity.linvel.x);
+
+        if direction != 0. {
             atlas.index = ((time.elapsed_seconds() * 15.0).floor() as usize) % 6 + 7;
         }
         if velocity.linvel.x < 0.0 {

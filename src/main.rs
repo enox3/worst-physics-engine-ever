@@ -201,14 +201,38 @@ pub enum GameVariant {
 impl GameVariant {
     pub fn get_config(&self) -> GameConfig {
         match self {
-            GameVariant::Normal => GameConfig { movement_speed: 1. },
-            GameVariant::Iced => GameConfig { movement_speed: 2. },
-            GameVariant::BreakingColliders => GameConfig { movement_speed: 3. },
-            GameVariant::Mirrored => GameConfig { movement_speed: 4. },
-            GameVariant::Windy => GameConfig { movement_speed: 5. },
-            GameVariant::TiltMode => GameConfig { movement_speed: 1. },
-            GameVariant::RandomProgression => GameConfig { movement_speed: 1. },
-            GameVariant::Random => GameConfig { movement_speed: 1. },
+            GameVariant::Normal => GameConfig::default(),
+            GameVariant::Iced => GameConfig {
+                slide: Some(SlideFactors {
+                    acceleration: 0.1,
+                    deceleration: 0.98,
+                }),
+                ..default()
+            },
+            GameVariant::BreakingColliders => GameConfig {
+                movement_speed: 3.,
+                ..default()
+            },
+            GameVariant::Mirrored => GameConfig {
+                movement_speed: 4.,
+                ..default()
+            },
+            GameVariant::Windy => GameConfig {
+                movement_speed: 5.,
+                ..default()
+            },
+            GameVariant::TiltMode => GameConfig {
+                movement_speed: 1.,
+                ..default()
+            },
+            GameVariant::RandomProgression => GameConfig {
+                movement_speed: 1.,
+                ..default()
+            },
+            GameVariant::Random => GameConfig {
+                movement_speed: 1.,
+                ..default()
+            },
         }
     }
     pub fn get_config_by_index(index: usize) -> GameConfig {
@@ -275,14 +299,44 @@ impl Progression {
             .sum()
     }
 }
+pub struct SlideFactors {
+    acceleration: f32,
+    deceleration: f32,
+}
 
 #[derive(Resource)]
 pub struct GameConfig {
     pub movement_speed: f32,
+    pub slide: Option<SlideFactors>,
 }
 impl Default for GameConfig {
     fn default() -> Self {
-        GameConfig { movement_speed: 1. }
+        GameConfig {
+            movement_speed: 200.,
+            slide: None,
+        }
+    }
+}
+impl GameConfig {
+    pub fn calculate_speed(&self, direction: f32, current_speed: f32) -> f32 {
+        if let Some(slide_factor) = &self.slide {
+            if direction == 0.0 {
+                let speed = current_speed * slide_factor.deceleration;
+
+                // Otherwise speed will diverge to 0 & player runs very slowly forever
+                if speed.abs() > 5. {
+                    speed
+                } else {
+                    0.
+                }
+            } else {
+                let speed =
+                    direction * (slide_factor.acceleration * self.movement_speed) + current_speed;
+                speed.min(self.movement_speed).max(-self.movement_speed)
+            }
+        } else {
+            direction * self.movement_speed
+        }
     }
 }
 
