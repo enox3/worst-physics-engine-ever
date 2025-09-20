@@ -2,10 +2,11 @@ use std::f32::consts::FRAC_PI_3;
 
 use bevy::{prelude::*, utils::HashSet};
 use bevy_ecs_ldtk::{LdtkWorldBundle, LevelSelection};
+use worst_physics_engine_ever::GameVariant;
 
 use crate::{
     audio::AudioEvent, edit::EnabledColliders, CurrentLevel, CurrentTab, FontHandle, GameConfig,
-    GameKind, GameMode, GameVariant, LdtkHandle, Progression, ACTIVE_BUTTON, ACTIVE_HOVERED_BUTTON,
+    GameKind, GameMode, LdtkHandle, Progression, ACTIVE_BUTTON, ACTIVE_HOVERED_BUTTON,
     DISABLED_BUTTON, HOVERED_BUTTON, LEVELS, NORMAL_BUTTON, PRESSED_BUTTON,
     REQUIRED_STARS_PER_VARIANT, TEXT_COLOR,
 };
