@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::ecs::system::Resource;
 
 use crate::extension::NUM_OF_VARIANTS;
 

@@ -1,22 +1,15 @@
-use aabb_picking_backend::AabbPickingBackend;
+#[cfg(not(feature = "debug"))]
 use bevy::prelude::*;
-use std::ops::Deref;
-use worst_physics_engine_ever::{GameConfig, Progression};
+use worst_physics_engine_ever::{
+    AabbPickingBackend, AudioPlugin, ChestBundle, CrashPlugin, CurrentTab, EditPlugin, FontHandle,
+    GameConfig, GameKind, GameMode, LadderBundle, LdtkHandle, LostPlugin, MenuPlugin, MobBundle,
+    PlayPlugin, PlayerBundle, Progression, PumpkinsBundle, WallBundle, WonPlugin, LEVELS,
+};
 
 use bevy_ecs_ldtk::prelude::*;
 use bevy_embedded_assets::EmbeddedAssetPlugin;
 use bevy_mod_picking::DefaultPickingPlugins;
 use bevy_rapier2d::prelude::*;
-
-mod aabb_picking_backend;
-mod audio;
-mod components;
-mod crash;
-mod edit;
-mod lost;
-mod menu;
-mod play;
-mod won;
 
 fn main() {
     App::new()
@@ -47,61 +40,26 @@ fn main() {
             ..Default::default()
         })
         .add_plugins((
-            won::WonPlugin,
-            lost::LostPlugin,
-            edit::EditPlugin,
-            play::PlayPlugin,
-            menu::MenuPlugin,
-            crash::CrashPlugin,
-            audio::AudioPlugin,
+            WonPlugin,
+            LostPlugin,
+            EditPlugin,
+            PlayPlugin,
+            MenuPlugin,
+            CrashPlugin,
+            AudioPlugin,
         ))
         .add_systems(Startup, setup)
-        .register_ldtk_int_cell::<components::WallBundle>(1)
-        .register_ldtk_int_cell::<components::LadderBundle>(2)
-        .register_ldtk_int_cell::<components::WallBundle>(3)
-        .register_ldtk_entity::<components::PlayerBundle>("Player")
-        .register_ldtk_entity::<components::MobBundle>("Mob")
-        .register_ldtk_entity::<components::ChestBundle>("Chest")
-        .register_ldtk_entity::<components::PumpkinsBundle>("Pumpkins")
+        .register_ldtk_int_cell::<WallBundle>(1)
+        .register_ldtk_int_cell::<LadderBundle>(2)
+        .register_ldtk_int_cell::<WallBundle>(3)
+        .register_ldtk_entity::<PlayerBundle>("Player")
+        .register_ldtk_entity::<MobBundle>("Mob")
+        .register_ldtk_entity::<ChestBundle>("Chest")
+        .register_ldtk_entity::<PumpkinsBundle>("Pumpkins")
         .add_state::<GameMode>()
         .add_state::<GameKind>()
         .run();
 }
-
-#[derive(States, Default, Debug, Hash, PartialEq, Eq, Clone, Copy)]
-enum GameKind {
-    #[cfg_attr(not(feature = "debug"), default)]
-    Platformer,
-    #[cfg_attr(feature = "debug", default)]
-    Puzzle,
-}
-
-#[derive(States, Default, Debug, Hash, PartialEq, Eq, Clone, Copy)]
-enum GameMode {
-    #[default]
-    Menu,
-    Edit,
-    Play,
-    Won,
-    Lost,
-    Crash,
-}
-
-const REQUIRED_STARS_PER_VARIANT: usize = if cfg!(debug_assertions) { 0 } else { 12 };
-
-const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
-const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
-const ACTIVE_BUTTON: Color = Color::rgb(0.3, 0.3, 0.3);
-const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
-const ACTIVE_HOVERED_BUTTON: Color = Color::rgb(0.25, 0.15, 0.15);
-const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.35, 0.35);
-const DISABLED_BUTTON: Color = Color::rgb(0.1, 0.1, 0.1);
-
-#[derive(Resource)]
-pub struct FontHandle(Handle<Font>);
-
-#[derive(Resource)]
-pub struct LdtkHandle(Handle<LdtkProject>);
 
 pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let camera = Camera2dBundle::default();
@@ -140,57 +98,4 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
     commands.insert_resource(CurrentTab(0));
     commands.insert_resource(GameConfig::default());
-}
-
-#[derive(Resource, Clone)]
-pub struct LevelInfo {
-    pub start_colliders: [GridCoords; 2],
-    pub thresholds: [usize; 3],
-    pub max_colliders: usize,
-}
-
-const LEVELS: [LevelInfo; 6] = [
-    LevelInfo {
-        start_colliders: [GridCoords { x: 5, y: 5 }, GridCoords { x: 30, y: 5 }],
-        thresholds: [5, 8, 10],
-        max_colliders: 20,
-    },
-    LevelInfo {
-        start_colliders: [GridCoords { x: 5, y: 5 }, GridCoords { x: 30, y: 5 }],
-        thresholds: [5, 8, 10],
-        max_colliders: 20,
-    },
-    LevelInfo {
-        start_colliders: [GridCoords { x: 5, y: 5 }, GridCoords { x: 30, y: 5 }],
-        thresholds: [5, 8, 10],
-        max_colliders: 20,
-    },
-    LevelInfo {
-        start_colliders: [GridCoords { x: 5, y: 5 }, GridCoords { x: 30, y: 5 }],
-        thresholds: [5, 8, 10],
-        max_colliders: 20,
-    },
-    LevelInfo {
-        start_colliders: [GridCoords { x: 1, y: 15 }, GridCoords { x: 34, y: 1 }],
-        thresholds: [7, 10, 13],
-        max_colliders: 20,
-    },
-    LevelInfo {
-        start_colliders: [GridCoords { x: 1, y: 15 }, GridCoords { x: 34, y: 1 }],
-        thresholds: [7, 10, 13],
-        max_colliders: 20,
-    },
-];
-
-#[derive(Resource)]
-struct CurrentLevel(usize);
-
-#[derive(Resource, Clone, Copy, Debug, Eq, PartialEq)]
-pub struct CurrentTab(pub usize);
-
-impl Deref for CurrentTab {
-    type Target = usize;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
 }

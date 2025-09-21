@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_ecs_ldtk::assets::LdtkProject;
 
 use crate::{
-    audio::AudioEvent, edit::EnabledColliders, CurrentLevel, CurrentTab, FontHandle, GameMode,
+    audio::AudioEvent, CurrentLevel, CurrentTab, EnabledColliders, FontHandle, GameMode,
     Progression, HOVERED_BUTTON, LEVELS, NORMAL_BUTTON, PRESSED_BUTTON, TEXT_COLOR,
 };
 

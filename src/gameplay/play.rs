@@ -1,5 +1,6 @@
+use super::*;
 use crate::{
-    audio::AudioEvent, components::*, edit::EnabledColliders, FontHandle, GameConfig, GameKind,
+    audio::AudioEvent, gameplay::edit::EnabledColliders, FontHandle, GameConfig, GameKind,
     GameMode, HOVERED_BUTTON, NORMAL_BUTTON, PRESSED_BUTTON, TEXT_COLOR,
 };
 use bevy::prelude::*;

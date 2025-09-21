@@ -2,7 +2,6 @@
 
 #![allow(clippy::type_complexity)]
 #![allow(clippy::too_many_arguments)]
-#![deny(missing_docs)]
 
 use std::cmp::Ordering;
 

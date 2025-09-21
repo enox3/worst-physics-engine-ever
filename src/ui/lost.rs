@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_ecs_ldtk::assets::LdtkProject;
 
 use crate::{
-    audio::AudioEvent, play::Playthrough, FontHandle, GameMode, HOVERED_BUTTON, NORMAL_BUTTON,
+    audio::AudioEvent, FontHandle, GameMode, Playthrough, HOVERED_BUTTON, NORMAL_BUTTON,
     PRESSED_BUTTON, TEXT_COLOR,
 };
 
