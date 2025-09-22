@@ -24,27 +24,22 @@ impl GameVariant {
                 ..GameConfig::default()
             },
             GameVariant::BreakingColliders => GameConfig {
-                movement_speed: 3.,
+                breaking_timer: Some(3.),
                 ..GameConfig::default()
             },
             GameVariant::Mirrored => GameConfig {
-                movement_speed: 4.,
                 ..GameConfig::default()
             },
             GameVariant::Windy => GameConfig {
-                movement_speed: 5.,
                 ..GameConfig::default()
             },
             GameVariant::TiltMode => GameConfig {
-                movement_speed: 1.,
                 ..GameConfig::default()
             },
             GameVariant::RandomProgression => GameConfig {
-                movement_speed: 1.,
                 ..GameConfig::default()
             },
             GameVariant::Random => GameConfig {
-                movement_speed: 1.,
                 ..GameConfig::default()
             },
         }

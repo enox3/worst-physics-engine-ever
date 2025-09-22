@@ -12,7 +12,7 @@ impl Default for GameConfig {
         GameConfig {
             movement_speed: 200.,
             slide: None,
-            breaking_timer: Some(3.),
+            breaking_timer: None,
         }
     }
 }
