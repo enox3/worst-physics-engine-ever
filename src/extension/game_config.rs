@@ -4,6 +4,7 @@ use bevy::ecs::system::Resource;
 pub struct GameConfig {
     pub movement_speed: f32,
     pub slide: Option<SlideFactors>,
+    pub breaking_timer: Option<f32>,
 }
 
 impl Default for GameConfig {
@@ -11,6 +12,7 @@ impl Default for GameConfig {
         GameConfig {
             movement_speed: 200.,
             slide: None,
+            breaking_timer: Some(3.),
         }
     }
 }
