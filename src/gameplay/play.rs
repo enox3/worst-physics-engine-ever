@@ -4,7 +4,7 @@ use crate::{
     DestroyOnPlayerContact, FontHandle, GameConfig, GameKind, GameMode, HOVERED_BUTTON,
     NORMAL_BUTTON, PRESSED_BUTTON, TEXT_COLOR,
 };
-use bevy::prelude::*;
+use bevy::{prelude::*, transform::commands};
 use bevy_ecs_ldtk::prelude::*;
 
 use std::collections::{HashMap, HashSet};
@@ -312,11 +312,15 @@ fn detect_collision_with_environment(
     player: Query<&Player>,
     chests: Query<&Chest>,
     enemy: Query<&Patrol>,
+    _collider_global: Query<&GlobalTransform>,
+    transforms: Query<&Transform>,
     mut next_state: ResMut<NextState<GameMode>>,
     mut audio_events: EventWriter<AudioEvent>,
     mut playthrough: ResMut<Playthrough>,
     mut commands: Commands,
     already_marked: Query<Entity, With<DestroyOnPlayerContact>>,
+    asset_server: Res<AssetServer>,
+    game_config: Res<GameConfig>,
 ) {
     for collision in collisions.read() {
         match collision {
@@ -344,23 +348,32 @@ fn detect_collision_with_environment(
                     playthrough.enemy_hit = true;
                     next_state.set(GameMode::Lost);
                 }
-                if player.contains(*collider_a)
-                    && !enemy.contains(*collider_b)
-                    && !chests.contains(*collider_b)
-                    && !already_marked.contains(*collider_b)
-                {
-                    commands.entity(*collider_b).insert(DestroyOnPlayerContact {
-                        timer: Timer::from_seconds(3.0, TimerMode::Once),
-                    });
-                }
-                if player.contains(*collider_b)
-                    && !enemy.contains(*collider_a)
-                    && !chests.contains(*collider_a)
-                    && !already_marked.contains(*collider_a)
-                {
-                    commands.entity(*collider_a).insert(DestroyOnPlayerContact {
-                        timer: Timer::from_seconds(3.0, TimerMode::Once),
-                    });
+                if let Some(breaking_time) = game_config.breaking_timer {
+                    check_collision_and_add_breaking_timer(
+                        &player,
+                        &enemy,
+                        &chests,
+                        &already_marked,
+                        &mut commands,
+                        &asset_server,
+                        &transforms,
+                        collider_a,
+                        collider_b,
+                        breaking_time,
+                    );
+
+                    check_collision_and_add_breaking_timer(
+                        &player,
+                        &enemy,
+                        &chests,
+                        &already_marked,
+                        &mut commands,
+                        &asset_server,
+                        &transforms,
+                        collider_b,
+                        collider_a,
+                        breaking_time,
+                    );
                 }
             }
             CollisionEvent::Stopped(collider_a, collider_b, _) => {
@@ -805,5 +818,43 @@ fn button_system(
             Interaction::Hovered => HOVERED_BUTTON.into(),
             Interaction::None => NORMAL_BUTTON.into(),
         }
+    }
+}
+
+fn check_collision_and_add_breaking_timer(
+    player: &Query<&Player>,
+    enemy: &Query<&Patrol>,
+    chests: &Query<&Chest>,
+    already_marked: &Query<Entity, With<DestroyOnPlayerContact>>,
+    commands: &mut Commands<'_, '_>,
+    asset_server: &Res<AssetServer>,
+    transforms: &Query<&Transform>,
+    collider_a: &Entity,
+    collider_b: &Entity,
+    breaking_time: f32,
+) {
+    if player.contains(*collider_a)
+        && !enemy.contains(*collider_b)
+        && !chests.contains(*collider_b)
+        && !already_marked.contains(*collider_b)
+    {
+        commands
+            .entity(*collider_b)
+            .insert(DestroyOnPlayerContact::new(breaking_time));
+        let texture: Handle<Image> = asset_server.load("breaking.png");
+        let mut transform = transforms.get(*collider_b).cloned().unwrap_or_default();
+        transform.translation.z = transform.translation.z.max(100.0);
+        commands.entity(*collider_b).insert((
+            SpriteBundle {
+                texture,
+                sprite: Sprite {
+                    custom_size: Some(Vec2::splat(16.0)),
+                    ..Default::default()
+                },
+                transform,
+                ..Default::default()
+            },
+            OnPlayMode,
+        ));
     }
 }
