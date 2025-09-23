@@ -1,10 +1,13 @@
 use bevy::ecs::system::Resource;
 
+use crate::Wind;
+
 #[derive(Resource)]
 pub struct GameConfig {
     pub movement_speed: f32,
     pub slide: Option<SlideFactors>,
     pub breaking_timer: Option<f32>,
+    pub wind: Option<Wind>,
 }
 
 impl Default for GameConfig {
@@ -13,6 +16,7 @@ impl Default for GameConfig {
             movement_speed: 200.,
             slide: None,
             breaking_timer: None,
+            wind: None,
         }
     }
 }
@@ -31,7 +35,7 @@ impl GameConfig {
             } else {
                 let speed =
                     direction * (slide_factor.acceleration * self.movement_speed) + current_speed;
-                speed.min(self.movement_speed).max(-self.movement_speed)
+                speed.clamp(-self.movement_speed, self.movement_speed)
             }
         } else {
             direction * self.movement_speed

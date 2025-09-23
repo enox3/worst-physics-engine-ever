@@ -285,7 +285,7 @@ fn button_system(
                             enabled.coords.insert(*coord);
                         }
 
-                        let mut rng = rand::thread_rng();
+                        let mut rng = rand::rng();
                         while enabled.coords.len() < LEVELS[level.0].max_colliders {
                             let sample = wall_query.iter().choose(&mut rng).unwrap();
                             enabled.coords.insert(*sample);

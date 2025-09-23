@@ -1,4 +1,4 @@
-use crate::{extension::NUM_OF_VARIANTS, GameConfig, SlideFactors};
+use crate::{extension::NUM_OF_VARIANTS, GameConfig, SlideFactors, Wind};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum GameVariant {
@@ -24,13 +24,19 @@ impl GameVariant {
                 ..GameConfig::default()
             },
             GameVariant::BreakingColliders => GameConfig {
-                breaking_timer: Some(3.),
+                breaking_timer: Some(2.),
                 ..GameConfig::default()
             },
             GameVariant::Mirrored => GameConfig {
                 ..GameConfig::default()
             },
             GameVariant::Windy => GameConfig {
+                wind: Some(Wind {
+                    frequency: 1.,
+                    speed: 250.,
+                    strength: 100.,
+                    cooldown: 0.5,
+                }),
                 ..GameConfig::default()
             },
             GameVariant::TiltMode => GameConfig {

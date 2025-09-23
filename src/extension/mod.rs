@@ -3,11 +3,13 @@ mod current_tab;
 mod game_config;
 mod game_variant;
 mod progression;
+mod wind;
 
 pub use breaking::*;
 pub use current_tab::*;
 pub use game_config::*;
 pub use game_variant::*;
 pub use progression::*;
+pub use wind::*;
 
 const NUM_OF_VARIANTS: usize = 8;

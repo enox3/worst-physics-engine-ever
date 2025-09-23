@@ -1,10 +1,10 @@
 use super::*;
 use crate::{
-    audio::AudioEvent, destroy_colliders_on_timer, gameplay::edit::EnabledColliders,
+    audio::AudioEvent, destroy_colliders_on_timer, extension::*, gameplay::edit::EnabledColliders,
     DestroyOnPlayerContact, FontHandle, GameConfig, GameKind, GameMode, HOVERED_BUTTON,
     NORMAL_BUTTON, PRESSED_BUTTON, TEXT_COLOR,
 };
-use bevy::{prelude::*, transform::commands};
+use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
 
 use std::collections::{HashMap, HashSet};
@@ -20,6 +20,9 @@ impl Plugin for PlayPlugin {
             (
                 ignore_gravity_if_climbing,
                 detect_collision_with_environment,
+                wind_spawn_system,
+                wind_movement_system,
+                wind_cleanup_system,
                 movement,
                 patrol,
                 ground_detection,
@@ -31,10 +34,20 @@ impl Plugin for PlayPlugin {
                 button_system,
                 camera_fit_inside_current_level,
                 destroy_colliders_on_timer,
+                wind_effect_system,
+                cleanup_wind_cooldowns,
             )
                 .run_if(in_state(GameMode::Play)),
         )
-        .add_systems(OnEnter(GameMode::Play), setup_play_mode)
+        .add_systems(
+            OnEnter(GameMode::Play),
+            (
+                setup_play_mode,
+                setup_wind_spawner,
+                setup_wind_atlas,
+                setup_wind_direction,
+            ),
+        )
         .add_systems(OnExit(GameMode::Play), exit_mode)
         .add_systems(Update, freeze.run_if(not(in_state(GameMode::Play))));
     }
@@ -69,6 +82,7 @@ fn movement(
             &mut Climber,
             &GroundDetection,
             &mut TextureAtlasSprite,
+            Option<&WindCooldown>,
         ),
         With<Player>,
     >,
@@ -76,24 +90,25 @@ fn movement(
     mut audio_events: EventWriter<AudioEvent>,
     game_config: Res<GameConfig>,
 ) {
-    for (mut velocity, mut climber, ground_detection, mut atlas) in &mut query {
+    for (mut velocity, mut climber, ground_detection, mut atlas, _wind_cooldown) in &mut query {
         let right = if input.pressed(KeyCode::D) { 1. } else { 0. };
         let left = if input.pressed(KeyCode::A) { 1. } else { 0. };
 
         let direction = right - left;
 
-        velocity.linvel.x = game_config.calculate_speed(direction, velocity.linvel.x);
+        // Calculate movement velocity based on input
+        let movement_velocity = game_config.calculate_speed(direction, velocity.linvel.x);
+
+        velocity.linvel.x = movement_velocity;
 
         if direction != 0. {
             atlas.index = ((time.elapsed_seconds() * 15.0).floor() as usize) % 6 + 7;
         }
-        if velocity.linvel.x < 0.0 {
+        if direction < 0.0 {
             atlas.flip_x = true;
-        }
-        if velocity.linvel.x > 0.0 {
+        } else if direction > 0.0 {
             atlas.flip_x = false;
-        }
-        if velocity.linvel.x == 0.0 {
+        } else if direction == 0.0 {
             atlas.index = ((time.elapsed_seconds() * 5.0).floor() as usize) % 4;
         }
 
@@ -633,7 +648,7 @@ fn update_on_ground(
 }
 
 #[derive(Component)]
-struct OnPlayMode;
+pub struct OnPlayMode;
 
 fn setup_play_mode(
     mut commands: Commands,
