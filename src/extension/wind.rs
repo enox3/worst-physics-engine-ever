@@ -198,6 +198,13 @@ pub fn cleanup_wind_cooldowns(
     }
 }
 
+// Cleanup wind spawners when exiting play mode
+pub fn cleanup_wind_spawners(mut commands: Commands, spawner_query: Query<Entity, With<WindSpawner>>) {
+    for entity in &spawner_query {
+        commands.entity(entity).despawn();
+    }
+}
+
 #[derive(Component)]
 pub struct WindEntity {
     pub speed: f32,

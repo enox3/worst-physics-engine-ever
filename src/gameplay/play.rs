@@ -48,7 +48,7 @@ impl Plugin for PlayPlugin {
                 setup_wind_direction,
             ),
         )
-        .add_systems(OnExit(GameMode::Play), exit_mode)
+        .add_systems(OnExit(GameMode::Play), (exit_mode, cleanup_wind_spawners))
         .add_systems(Update, freeze.run_if(not(in_state(GameMode::Play))));
     }
 }

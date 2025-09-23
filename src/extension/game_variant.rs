@@ -33,7 +33,7 @@ impl GameVariant {
             },
             GameVariant::Windy => GameConfig {
                 wind: Some(Wind {
-                    frequency: 2.,
+                    frequency: 1.,
                     speed: 250.,
                     strength: 100.,
                     cooldown: 0.5,

@@ -69,7 +69,7 @@ pub enum GameMode {
     Crash,
 }
 
-pub const REQUIRED_STARS_PER_VARIANT: usize = if cfg!(debug_assertions) { 0 } else { 12 };
+pub const REQUIRED_STARS_PER_VARIANT: usize = if cfg!(debug_assertions) { 0 } else { 9 };
 
 pub const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 pub const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
