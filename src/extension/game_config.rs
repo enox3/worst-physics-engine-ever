@@ -8,6 +8,7 @@ pub struct GameConfig {
     pub slide: Option<SlideFactors>,
     pub breaking_timer: Option<f32>,
     pub wind: Option<Wind>,
+    pub mirror: bool,
 }
 
 impl Default for GameConfig {
@@ -17,6 +18,7 @@ impl Default for GameConfig {
             slide: None,
             breaking_timer: None,
             wind: None,
+            mirror: false,
         }
     }
 }

@@ -156,6 +156,19 @@ fn spawn_complete_wall_collision(
     game_kind: Res<State<GameKind>>,
     game_config: Res<GameConfig>,
 ) {
+    let enabled = if game_config.mirror {
+        let coords = enabled
+            .coords
+            .iter()
+            .map(|coord| GridCoords::new(35 - coord.x, coord.y))
+            .collect();
+
+        EnabledColliders { coords }
+    } else {
+        EnabledColliders {
+            coords: enabled.coords.clone(),
+        }
+    };
     #[derive(Clone, Eq, PartialEq, Debug, Default, Hash)]
     struct Plate {
         left: i32,

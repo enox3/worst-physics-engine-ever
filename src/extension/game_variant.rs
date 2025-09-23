@@ -28,11 +28,12 @@ impl GameVariant {
                 ..GameConfig::default()
             },
             GameVariant::Mirrored => GameConfig {
+                mirror: true,
                 ..GameConfig::default()
             },
             GameVariant::Windy => GameConfig {
                 wind: Some(Wind {
-                    frequency: 1.,
+                    frequency: 2.,
                     speed: 250.,
                     strength: 100.,
                     cooldown: 0.5,
