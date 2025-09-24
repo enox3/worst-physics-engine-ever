@@ -115,6 +115,7 @@ pub struct PlayerBundle {
     pub worldly: Worldly,
     pub climber: Climber,
     pub ground_detection: GroundDetection,
+    pub external_force: ExternalForce,
 
     // Build Items Component manually by using `impl From<&EntityInstance>`
     #[from_entity_instance]

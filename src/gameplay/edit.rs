@@ -9,8 +9,9 @@ use bevy_rapier2d::plugin::RapierConfiguration;
 use rand::seq::IteratorRandom;
 
 use crate::{
-    audio::AudioEvent, gameplay::components::Wall, utils::HOVERED_BUTTON, CurrentLevel, FontHandle,
-    GameMode, LEVELS, NORMAL_BUTTON, PRESSED_BUTTON, TEXT_COLOR,
+    audio::AudioEvent, camera_smooth_rotation, camera_tilt_system, gameplay::components::Wall,
+    utils::HOVERED_BUTTON, CurrentLevel, FontHandle, GameMode, LEVELS, NORMAL_BUTTON,
+    PRESSED_BUTTON, TEXT_COLOR,
 };
 
 pub struct EditPlugin;
@@ -25,10 +26,14 @@ impl Plugin for EditPlugin {
                 update_collider_count,
                 button_system,
                 crate::gameplay::play::camera_fit_inside_current_level,
+                camera_smooth_rotation,
             )
                 .run_if(in_state(GameMode::Edit)),
         )
-        .add_systems(OnEnter(GameMode::Edit), setup_edit_mode)
+        .add_systems(
+            OnEnter(GameMode::Edit),
+            (setup_edit_mode, camera_tilt_system),
+        )
         .add_systems(OnExit(GameMode::Edit), exit_mode);
     }
 }

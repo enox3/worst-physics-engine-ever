@@ -1,9 +1,10 @@
 #[cfg(not(feature = "debug"))]
 use bevy::prelude::*;
 use worst_physics_engine_ever::{
-    AabbPickingBackend, AudioPlugin, ChestBundle, CrashPlugin, CurrentTab, EditPlugin, FontHandle,
-    GameConfig, GameKind, GameMode, LadderBundle, LdtkHandle, LostPlugin, MenuPlugin, MobBundle,
-    PlayPlugin, PlayerBundle, Progression, PumpkinsBundle, WallBundle, WonPlugin, LEVELS,
+    AabbPickingBackend, AudioPlugin, CameraTilt, ChestBundle, CrashPlugin, CurrentTab, EditPlugin,
+    FontHandle, GameConfig, GameKind, GameMode, LadderBundle, LdtkHandle, LostPlugin, MenuPlugin,
+    MobBundle, PlayPlugin, PlayerBundle, Progression, PumpkinsBundle, WallBundle, WonPlugin,
+    LEVELS,
 };
 
 use bevy_ecs_ldtk::prelude::*;
@@ -63,7 +64,14 @@ fn main() {
 
 pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let camera = Camera2dBundle::default();
-    commands.spawn(camera);
+    commands.spawn((
+        camera,
+        CameraTilt {
+            target_rotation: 0.0,
+            current_rotation: 0.0,
+            rotation_speed: 1.0,
+        },
+    ));
 
     let world = asset_server.load("Typical_2D_platformer_example.ldtk");
     commands.insert_resource(LdtkHandle(world));
