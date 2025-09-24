@@ -6,7 +6,6 @@ use crate::{
 };
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
-use rand::Rng;
 
 use std::collections::{HashMap, HashSet};
 
@@ -76,6 +75,7 @@ fn freeze(mut moving: Query<&mut Velocity>) {
     }
 }
 
+#[allow(clippy::complexity)]
 fn movement(
     input: Res<Input<KeyCode>>,
     mut query: Query<
@@ -858,6 +858,7 @@ fn button_system(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn check_collision_and_add_breaking_timer(
     player: &Query<&Player>,
     enemy: &Query<&Patrol>,
