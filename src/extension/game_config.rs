@@ -44,8 +44,8 @@ impl GameConfig {
         } else {
             direction * self.movement_speed
         };
-        speed = if let Some(_) = &self.tilt {
-            speed + tilt_speed * 5.
+        speed += if let Some(_) = &self.tilt {
+            tilt_speed * 5.
         } else {
             0.
         };
