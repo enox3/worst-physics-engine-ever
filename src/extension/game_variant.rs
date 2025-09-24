@@ -60,11 +60,11 @@ impl GameVariant {
             0 => GameVariant::Normal,
             1 => GameVariant::Iced,
             2 => GameVariant::BreakingColliders,
-            3 => GameVariant::Mirrored,
-            4 => GameVariant::Windy,
-            5 => GameVariant::TiltMode,
-            6 => GameVariant::RandomProgression,
-            7 => GameVariant::Random,
+            3 => GameVariant::Windy,
+            4 => GameVariant::TiltMode,
+            5 => GameVariant::Mirrored,
+            6 => GameVariant::Random,
+            7 => GameVariant::RandomProgression,
             _ => GameVariant::Normal,
         }
     }
@@ -73,11 +73,11 @@ impl GameVariant {
             0 => "Normal",
             1 => "Iced",
             2 => "Break",
-            3 => "Mirror",
-            4 => "Wind",
-            5 => "Tilt",
-            6 => "RandProg",
-            7 => "Rand",
+            3 => "Wind",
+            4 => "Tilt",
+            5 => "Mirror",
+            6 => "Rand",
+            7 => "RandProg",
             _ => "Normal",
         }
         .into()
