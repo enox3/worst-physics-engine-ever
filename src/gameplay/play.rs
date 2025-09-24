@@ -165,6 +165,19 @@ fn spawn_complete_wall_collision(
     game_kind: Res<State<GameKind>>,
     game_config: Res<GameConfig>,
 ) {
+    #[derive(Clone, Eq, PartialEq, Debug, Default, Hash)]
+    struct Plate {
+        left: i32,
+        right: i32,
+    }
+
+    struct Rect {
+        left: i32,
+        right: i32,
+        top: i32,
+        bottom: i32,
+    }
+
     let enabled = if game_config.mirror {
         let coords = enabled
             .coords
@@ -178,18 +191,6 @@ fn spawn_complete_wall_collision(
             coords: enabled.coords.clone(),
         }
     };
-    #[derive(Clone, Eq, PartialEq, Debug, Default, Hash)]
-    struct Plate {
-        left: i32,
-        right: i32,
-    }
-
-    struct Rect {
-        left: i32,
-        right: i32,
-        top: i32,
-        bottom: i32,
-    }
 
     let mut level_to_wall_locations: HashMap<Entity, HashSet<GridCoords>> = HashMap::new();
 
