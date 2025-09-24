@@ -17,7 +17,7 @@ impl CameraTilt {
     }
 }
 
-pub fn camera_tilt_system(
+pub fn setup_camera_tilt(
     mut camera_query: Query<(&mut Transform, &mut CameraTilt), With<Camera>>,
     game_config: ResMut<GameConfig>,
 ) {
@@ -28,6 +28,10 @@ pub fn camera_tilt_system(
         for (_transform, mut camera_tilt) in &mut camera_query {
             let tilt_radians = (tilt_degree * direction) as f32 * PI / 180.0;
             camera_tilt.target_rotation = tilt_radians;
+        }
+    } else {
+        for (_transform, mut camera_tilt) in &mut camera_query {
+            camera_tilt.target_rotation = 0.;
         }
     }
 }

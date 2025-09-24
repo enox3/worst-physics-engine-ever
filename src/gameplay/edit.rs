@@ -9,7 +9,7 @@ use bevy_rapier2d::plugin::RapierConfiguration;
 use rand::seq::IteratorRandom;
 
 use crate::{
-    audio::AudioEvent, camera_smooth_rotation, camera_tilt_system, gameplay::components::Wall,
+    audio::AudioEvent, camera_smooth_rotation, gameplay::components::Wall, setup_camera_tilt,
     utils::HOVERED_BUTTON, CurrentLevel, FontHandle, GameMode, LEVELS, NORMAL_BUTTON,
     PRESSED_BUTTON, TEXT_COLOR,
 };
@@ -32,7 +32,7 @@ impl Plugin for EditPlugin {
         )
         .add_systems(
             OnEnter(GameMode::Edit),
-            (setup_edit_mode, camera_tilt_system),
+            (setup_edit_mode, setup_camera_tilt),
         )
         .add_systems(OnExit(GameMode::Edit), exit_mode);
     }

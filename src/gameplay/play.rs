@@ -97,7 +97,11 @@ fn movement(
         let right = if input.pressed(KeyCode::D) { 1. } else { 0. };
         let left = if input.pressed(KeyCode::A) { 1. } else { 0. };
 
-        let direction = right - left;
+        let direction = if game_config.mirror {
+            left - right
+        } else {
+            right - left
+        };
 
         let tilt_speed = camera_query
             .iter()
