@@ -41,6 +41,7 @@ impl GameVariant {
                 ..GameConfig::default()
             },
             GameVariant::TiltMode => GameConfig {
+                tilt: Some(10),
                 ..GameConfig::default()
             },
             GameVariant::RandomProgression => GameConfig {

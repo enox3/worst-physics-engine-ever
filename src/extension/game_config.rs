@@ -9,6 +9,7 @@ pub struct GameConfig {
     pub breaking_timer: Option<f32>,
     pub wind: Option<Wind>,
     pub mirror: bool,
+    pub tilt: Option<i8>,
 }
 
 impl Default for GameConfig {
@@ -19,12 +20,13 @@ impl Default for GameConfig {
             breaking_timer: None,
             wind: None,
             mirror: false,
+            tilt: None,
         }
     }
 }
 impl GameConfig {
-    pub fn calculate_speed(&self, direction: f32, current_speed: f32) -> f32 {
-        if let Some(slide_factor) = &self.slide {
+    pub fn calculate_speed(&self, direction: f32, current_speed: f32, tilt_speed: f32) -> f32 {
+        let mut speed = if let Some(slide_factor) = &self.slide {
             if direction == 0.0 {
                 let speed = current_speed * slide_factor.deceleration;
 
@@ -41,7 +43,13 @@ impl GameConfig {
             }
         } else {
             direction * self.movement_speed
-        }
+        };
+        speed += if self.tilt.is_some() {
+            tilt_speed * 5.
+        } else {
+            0.
+        };
+        speed
     }
 }
 

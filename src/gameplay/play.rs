@@ -36,6 +36,7 @@ impl Plugin for PlayPlugin {
                 destroy_colliders_on_timer,
                 wind_effect_system,
                 cleanup_wind_cooldowns,
+                camera_smooth_rotation,
             )
                 .run_if(in_state(GameMode::Play)),
         )
@@ -74,6 +75,7 @@ fn freeze(mut moving: Query<&mut Velocity>) {
     }
 }
 
+#[allow(clippy::complexity)]
 fn movement(
     input: Res<Input<KeyCode>>,
     mut query: Query<
@@ -89,6 +91,7 @@ fn movement(
     time: Res<Time>,
     mut audio_events: EventWriter<AudioEvent>,
     game_config: Res<GameConfig>,
+    camera_query: Query<&CameraTilt, With<Camera>>,
 ) {
     for (mut velocity, mut climber, ground_detection, mut atlas, _wind_cooldown) in &mut query {
         let right = if input.pressed(KeyCode::D) { 1. } else { 0. };
@@ -96,8 +99,14 @@ fn movement(
 
         let direction = right - left;
 
+        let tilt_speed = camera_query
+            .iter()
+            .map(|ct| ct.tilt_speed_by_current_rotation())
+            .sum();
+
         // Calculate movement velocity based on input
-        let movement_velocity = game_config.calculate_speed(direction, velocity.linvel.x);
+        let movement_velocity =
+            game_config.calculate_speed(direction, velocity.linvel.x, tilt_speed);
 
         velocity.linvel.x = movement_velocity;
 
@@ -521,7 +530,7 @@ pub fn camera_fit_inside_current_level(
                     height: height - 4.0,
                 };
                 camera_transform.translation.x =
-                    (player_translation.x - level_transform.translation.x - width / 2.)
+                    (player_translation.x - level_transform.translation.x - width / 2. + 100.0)
                         .clamp(0., level.px_wid as f32 - width);
                 camera_transform.translation.y = 0.;
             } else {
@@ -533,7 +542,7 @@ pub fn camera_fit_inside_current_level(
                 camera_transform.translation.y =
                     (player_translation.y - level_transform.translation.y - height / 2.)
                         .clamp(0., level.px_hei as f32 - height);
-                camera_transform.translation.x = 0.;
+                camera_transform.translation.x = 100.0;
             }
 
             camera_transform.translation.x += level_transform.translation.x;
@@ -849,6 +858,7 @@ fn button_system(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn check_collision_and_add_breaking_timer(
     player: &Query<&Player>,
     enemy: &Query<&Patrol>,
