@@ -1,4 +1,5 @@
 use bevy::ecs::system::Resource;
+use rand::Rng;
 
 use crate::Wind;
 
@@ -24,7 +25,42 @@ impl Default for GameConfig {
         }
     }
 }
+
 impl GameConfig {
+    pub fn random<R: Rng + ?Sized>(rng: &mut R) -> GameConfig {
+        GameConfig {
+            movement_speed: rng.random_range(150.0..250.0),
+            slide: if rng.random_bool(0.5) {
+                Some(SlideFactors {
+                    acceleration: rng.random_range(0.05..0.15),
+                    deceleration: rng.random_range(0.95..0.99),
+                })
+            } else {
+                None
+            },
+            breaking_timer: if rng.random_bool(0.5) {
+                Some(rng.random_range(1.0..3.0))
+            } else {
+                None
+            },
+            wind: if rng.random_bool(0.5) {
+                Some(Wind {
+                    frequency: rng.random_range(0.5..2.0),
+                    speed: rng.random_range(200.0..300.0),
+                    strength: rng.random_range(50.0..150.0),
+                    cooldown: rng.random_range(0.1..0.8),
+                })
+            } else {
+                None
+            },
+            mirror: false,
+            tilt: if rng.random_bool(0.5) {
+                Some(rng.random_range(5..15))
+            } else {
+                None
+            },
+        }
+    }
     pub fn calculate_speed(&self, direction: f32, current_speed: f32, tilt_speed: f32) -> f32 {
         let mut speed = if let Some(slide_factor) = &self.slide {
             if direction == 0.0 {

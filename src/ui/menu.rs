@@ -1,5 +1,7 @@
 use std::f32::consts::FRAC_PI_3;
 
+use rand::Rng;
+
 use crate::{extension::GameVariant, EnabledColliders};
 use bevy::{prelude::*, utils::HashSet};
 use bevy_ecs_ldtk::{LdtkWorldBundle, LevelSelection};
@@ -223,7 +225,13 @@ fn setup(
                     ..default()
                 })
                 .with_children(|parent| {
-                    let max_levels = if current_tab.0 == 5 { 4 } else { LEVELS.len() };
+                    let max_levels = if current_tab.0 == 5 {
+                        4 // Mirror Variant
+                    } else if current_tab.0 == 6 {
+                        1 // Random variant
+                    } else {
+                        LEVELS.len()
+                    };
                     for i in 0..max_levels {
                         let levels = &progression.tabs[current_tab.0];
                         let enabled = i == 0 || levels[i - 1] != usize::MAX;
@@ -307,13 +315,30 @@ fn button_system(
                             GameKind::Platformer => next_state.set(GameMode::Play),
                             GameKind::Puzzle => next_state.set(GameMode::Edit),
                         };
+
+                        // Random variant
+                        let (actual_level, random_config) = if current_tab.0 == 6 {
+                            let mut rng = rand::rng();
+                            let random_level = rng.random_range(0..LEVELS.len());
+                            let random_config = GameConfig::random(&mut rng);
+                            (random_level, Some(random_config))
+                        } else {
+                            (*level, None)
+                        };
+
                         let mut coords = HashSet::new();
-                        for starter in &LEVELS[*level].start_colliders {
+                        for starter in &LEVELS[actual_level].start_colliders {
                             coords.insert(*starter);
                         }
                         commands.insert_resource(EnabledColliders { coords });
-                        commands.insert_resource(LevelSelection::index(*level));
-                        commands.insert_resource(CurrentLevel(*level));
+                        commands.insert_resource(LevelSelection::index(actual_level));
+                        commands.insert_resource(CurrentLevel(actual_level));
+
+                        // Apply random config if this is the Random variant
+                        if let Some(config) = random_config {
+                            *game_config = config;
+                        }
+
                         commands.spawn(LdtkWorldBundle {
                             ldtk_handle: world.0.clone(),
                             ..Default::default()
