@@ -99,7 +99,7 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             levels.clone(),
             levels.clone(),
             levels.clone(),
-            levels.clone(),
+            levels[0..4].to_vec(), // Mirror mode only has 4 levels
             levels.clone(),
             levels.clone(),
         ],

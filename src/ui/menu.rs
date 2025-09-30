@@ -223,7 +223,8 @@ fn setup(
                     ..default()
                 })
                 .with_children(|parent| {
-                    for i in 0..LEVELS.len() {
+                    let max_levels = if current_tab.0 == 5 { 4 } else { LEVELS.len() };
+                    for i in 0..max_levels {
                         let levels = &progression.tabs[current_tab.0];
                         let enabled = i == 0 || levels[i - 1] != usize::MAX;
                         let mut button = parent.spawn(ButtonBundle {
