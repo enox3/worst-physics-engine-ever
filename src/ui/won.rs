@@ -3,7 +3,7 @@ use bevy_ecs_ldtk::assets::LdtkProject;
 
 use crate::{
     audio::AudioEvent, CurrentLevel, CurrentTab, EnabledColliders, FontHandle, GameMode,
-    Progression, HOVERED_BUTTON, LEVELS, NORMAL_BUTTON, PRESSED_BUTTON, TEXT_COLOR,
+    Playthrough, Progression, HOVERED_BUTTON, LEVELS, NORMAL_BUTTON, PRESSED_BUTTON, TEXT_COLOR,
 };
 
 pub struct WonPlugin;
@@ -24,7 +24,7 @@ fn exit_screen(mut commands: Commands, query: Query<Entity, With<OnWonScreen>>) 
         commands.entity(entity).despawn_recursive();
     }
 }
-
+#[allow(clippy::too_many_arguments)]
 fn setup(
     mut commands: Commands,
     colliders: Res<EnabledColliders>,
@@ -33,7 +33,14 @@ fn setup(
     level: Res<CurrentLevel>,
     asset_server: Res<AssetServer>,
     current_tab: Res<CurrentTab>,
+    playthrough: Res<Playthrough>,
 ) {
+    let completion_time = playthrough.timer.elapsed_secs();
+    let colliders_used = colliders.coords.len();
+    let jumps_used = playthrough.jump_count;
+
+    let score = playthrough.calculate_score(colliders_used as u32);
+
     progression.tabs[current_tab.0][level.0] = LEVELS[level.0]
         .thresholds
         .binary_search(&colliders.coords.len())
@@ -98,6 +105,37 @@ fn setup(
                 )
                 .with_style(Style {
                     margin: UiRect::all(Val::Px(50.0)),
+                    ..default()
+                }),
+            );
+
+            // Stats
+            parent.spawn(
+                TextBundle::from_section(
+                    format!("Jumps: {} | Time: {:.1}s", jumps_used, completion_time),
+                    TextStyle {
+                        font_size: 30.0,
+                        color: TEXT_COLOR,
+                        font: font.0.clone(),
+                    },
+                )
+                .with_style(Style {
+                    margin: UiRect::all(Val::Px(20.0)),
+                    ..default()
+                }),
+            );
+
+            parent.spawn(
+                TextBundle::from_section(
+                    format!("Score: {}", score),
+                    TextStyle {
+                        font_size: 50.0,
+                        color: Color::rgb(1.0, 0.8, 0.0),
+                        font: font.0.clone(),
+                    },
+                )
+                .with_style(Style {
+                    margin: UiRect::all(Val::Px(30.0)),
                     ..default()
                 }),
             );

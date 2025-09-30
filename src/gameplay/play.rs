@@ -92,6 +92,7 @@ fn movement(
     mut audio_events: EventWriter<AudioEvent>,
     game_config: Res<GameConfig>,
     camera_query: Query<&CameraTilt, With<Camera>>,
+    mut playthrough: ResMut<Playthrough>,
 ) {
     for (mut velocity, mut climber, ground_detection, mut atlas, _wind_cooldown) in &mut query {
         let right = if input.pressed(KeyCode::D) { 1. } else { 0. };
@@ -153,6 +154,7 @@ fn movement(
             audio_events.send(AudioEvent::Jump);
             velocity.linvel.y = 500.;
             climber.climbing = false;
+            playthrough.jump_count += 1;
         }
     }
 }
@@ -784,8 +786,14 @@ fn setup_play_mode(
         lost_chest: false,
         lost_player: false,
         enemy_hit: false,
+        jump_count: 0,
     });
 }
+
+const SCORE_BASELINE: u32 = 5000;
+const COLLIDER_MULTIPLICATOR: u32 = 100;
+const JUMP_MULTIPLICATOR: u32 = 50;
+const TIMER_MULTIPLICATOR: u32 = 20;
 
 #[derive(Resource)]
 pub struct Playthrough {
@@ -793,6 +801,15 @@ pub struct Playthrough {
     pub lost_player: bool,
     pub lost_chest: bool,
     pub enemy_hit: bool,
+    pub jump_count: u32,
+}
+impl Playthrough {
+    pub fn calculate_score(&self, colliders_used: u32) -> u32 {
+        SCORE_BASELINE
+            .saturating_sub(colliders_used * COLLIDER_MULTIPLICATOR)
+            .saturating_sub(self.jump_count * JUMP_MULTIPLICATOR)
+            .saturating_sub(self.timer.elapsed_secs() as u32 * TIMER_MULTIPLICATOR)
+    }
 }
 
 #[derive(Component)]
