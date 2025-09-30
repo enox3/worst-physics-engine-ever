@@ -23,7 +23,7 @@ pub fn setup_camera_tilt(
 ) {
     if let Some(tilt_degree) = game_config.tilt {
         let mut rng = rand::rng();
-        let direction = if rng.random_bool(0.5) { 1 } else { -1 };
+        let direction = -1; //if rng.random_bool(0.5) { 1 } else { -1 };
         let tilt_degree = rng.random_range((tilt_degree / 4)..tilt_degree);
         for (_transform, mut camera_tilt) in &mut camera_query {
             let tilt_radians = (tilt_degree * direction) as f32 * PI / 180.0;
@@ -43,7 +43,7 @@ pub fn camera_smooth_rotation(
     for (mut transform, mut camera_tilt) in &mut camera_query {
         let rotation_diff = camera_tilt.target_rotation - camera_tilt.current_rotation;
 
-        if rotation_diff.abs() < 0.01 {
+        if rotation_diff.abs() < 0.001 {
             camera_tilt.current_rotation = camera_tilt.target_rotation;
         } else {
             let rotation_step = rotation_diff * camera_tilt.rotation_speed * time.delta_seconds();
