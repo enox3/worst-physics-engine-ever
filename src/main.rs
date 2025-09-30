@@ -3,8 +3,8 @@ use bevy::prelude::*;
 use worst_physics_engine_ever::{
     AabbPickingBackend, AudioPlugin, CameraTilt, ChestBundle, CrashPlugin, CurrentTab, EditPlugin,
     FontHandle, GameConfig, GameKind, GameMode, LadderBundle, LdtkHandle, LostPlugin, MenuPlugin,
-    MobBundle, PlayPlugin, PlayerBundle, Progression, PumpkinsBundle, WallBundle, WonPlugin,
-    LEVELS,
+    MobBundle, PlayPlugin, PlayerBundle, Progression, PumpkinsBundle, RandomProgressState,
+    WallBundle, WonPlugin, LEVELS,
 };
 
 use bevy_ecs_ldtk::prelude::*;
@@ -101,9 +101,10 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             levels.clone(),
             levels[0..4].to_vec(), // Mirror mode only has 4 levels
             levels[0..1].to_vec(), // Random mode only has 1 level
-            levels.clone(),
+            levels[0..1].to_vec(), // RandomProgress mode only has 1 level
         ],
     });
     commands.insert_resource(CurrentTab(0));
     commands.insert_resource(GameConfig::default());
+    commands.insert_resource(RandomProgressState::default());
 }

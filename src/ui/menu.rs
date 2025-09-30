@@ -8,8 +8,9 @@ use bevy_ecs_ldtk::{LdtkWorldBundle, LevelSelection};
 
 use crate::{
     audio::AudioEvent, CurrentLevel, CurrentTab, FontHandle, GameConfig, GameKind, GameMode,
-    LdtkHandle, Progression, ACTIVE_BUTTON, ACTIVE_HOVERED_BUTTON, DISABLED_BUTTON, HOVERED_BUTTON,
-    LEVELS, NORMAL_BUTTON, PRESSED_BUTTON, REQUIRED_STARS_PER_VARIANT, TEXT_COLOR,
+    LdtkHandle, Progression, RandomProgressState, ACTIVE_BUTTON, ACTIVE_HOVERED_BUTTON,
+    DISABLED_BUTTON, HOVERED_BUTTON, LEVELS, NORMAL_BUTTON, PRESSED_BUTTON,
+    REQUIRED_STARS_PER_VARIANT, TEXT_COLOR,
 };
 
 pub struct MenuPlugin;
@@ -227,8 +228,8 @@ fn setup(
                 .with_children(|parent| {
                     let max_levels = if current_tab.0 == 5 {
                         4 // Mirror Variant
-                    } else if current_tab.0 == 6 {
-                        1 // Random variant
+                    } else if current_tab.0 == 6 || current_tab.0 == 7 {
+                        1 // Random & RandProg variant
                     } else {
                         LEVELS.len()
                     };
@@ -246,15 +247,20 @@ fn setup(
                             ..default()
                         });
                         button.with_children(|parent| {
+                            let button_text = if current_tab.0 == 6 || current_tab.0 == 7 {
+                                "Start".to_string()
+                            } else {
+                                format!("Level {}", i + 1)
+                            };
                             parent.spawn(TextBundle::from_section(
-                                format!("Level {}", i + 1),
+                                button_text,
                                 if enabled {
                                     button_text_style.clone()
                                 } else {
                                     disabled_button_text_style.clone()
                                 },
                             ));
-                            if levels[i] < 3 {
+                            if current_tab.0 != 7 && levels[i] < 3 {
                                 parent.spawn(ImageBundle {
                                     style: Style {
                                         position_type: PositionType::Absolute,
@@ -304,6 +310,7 @@ fn button_system(
     mut audio_events: EventWriter<AudioEvent>,
     mut current_tab: ResMut<CurrentTab>,
     mut game_config: ResMut<GameConfig>,
+    mut random_progress: ResMut<RandomProgressState>,
 ) {
     for (interaction, mut color, button) in &mut interaction_query {
         *color = match *interaction {
@@ -316,11 +323,15 @@ fn button_system(
                             GameKind::Puzzle => next_state.set(GameMode::Edit),
                         };
 
-                        // Random variant
                         let (actual_level, random_config) = if current_tab.0 == 6 {
                             let mut rng = rand::rng();
                             let random_level = rng.random_range(0..LEVELS.len());
                             let random_config = GameConfig::random(&mut rng);
+                            (random_level, Some(random_config))
+                        } else if current_tab.0 == 7 {
+                            let random_level = random_progress.rng.random_range(0..LEVELS.len());
+                            let random_config = GameConfig::random(&mut random_progress.rng);
+                            random_progress.advance_rng();
                             (random_level, Some(random_config))
                         } else {
                             (*level, None)
@@ -332,9 +343,13 @@ fn button_system(
                         }
                         commands.insert_resource(EnabledColliders { coords });
                         commands.insert_resource(LevelSelection::index(actual_level));
-                        commands.insert_resource(CurrentLevel(actual_level));
+                        let progression_level = if current_tab.0 == 6 || current_tab.0 == 7 {
+                            0
+                        } else {
+                            actual_level
+                        };
+                        commands.insert_resource(CurrentLevel(progression_level));
 
-                        // Apply random config if this is the Random variant
                         if let Some(config) = random_config {
                             *game_config = config;
                         }

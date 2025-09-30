@@ -2,8 +2,8 @@ use bevy::prelude::*;
 use bevy_ecs_ldtk::assets::LdtkProject;
 
 use crate::{
-    audio::AudioEvent, FontHandle, GameMode, Playthrough, HOVERED_BUTTON, NORMAL_BUTTON,
-    PRESSED_BUTTON, TEXT_COLOR,
+    audio::AudioEvent, CurrentTab, FontHandle, GameMode, Playthrough, RandomProgressState,
+    HOVERED_BUTTON, NORMAL_BUTTON, PRESSED_BUTTON, TEXT_COLOR,
 };
 
 pub struct LostPlugin;
@@ -25,7 +25,13 @@ fn exit_screen(mut commands: Commands, query: Query<Entity, With<OnLostScreen>>)
     }
 }
 
-fn setup(mut commands: Commands, playthrough: Res<Playthrough>, font: Res<FontHandle>) {
+fn setup(
+    mut commands: Commands,
+    playthrough: Res<Playthrough>,
+    font: Res<FontHandle>,
+    mut random_progress: ResMut<RandomProgressState>,
+    current_tab: Res<CurrentTab>,
+) {
     // Common style for all buttons on the screen
     let button_style = Style {
         width: Val::Px(250.0),
@@ -59,20 +65,86 @@ fn setup(mut commands: Commands, playthrough: Res<Playthrough>, font: Res<FontHa
             OnLostScreen,
         ))
         .with_children(|parent| {
-            parent.spawn(
-                TextBundle::from_section(
-                    "You lost...",
-                    TextStyle {
-                        font_size: 60.0,
-                        color: TEXT_COLOR,
-                        font: font.0.clone(),
-                    },
-                )
-                .with_style(Style {
-                    margin: UiRect::all(Val::Px(50.0)),
-                    ..default()
-                }),
-            );
+            if current_tab.0 == 7 {
+                random_progress.lose_life();
+
+                if random_progress.is_game_over() {
+                    parent.spawn(
+                        TextBundle::from_section(
+                            "Game Over!",
+                            TextStyle {
+                                font_size: 80.0,
+                                color: Color::RED,
+                                font: font.0.clone(),
+                            },
+                        )
+                        .with_style(Style {
+                            margin: UiRect::all(Val::Px(50.0)),
+                            ..default()
+                        }),
+                    );
+                    parent.spawn(
+                        TextBundle::from_section(
+                            format!("Final Score: {}", random_progress.intermediate_score),
+                            TextStyle {
+                                font_size: 50.0,
+                                color: Color::rgb(1.0, 0.8, 0.0),
+                                font: font.0.clone(),
+                            },
+                        )
+                        .with_style(Style {
+                            margin: UiRect::all(Val::Px(30.0)),
+                            ..default()
+                        }),
+                    );
+                    random_progress.reset();
+                } else {
+                    parent.spawn(
+                        TextBundle::from_section(
+                            "You lost...",
+                            TextStyle {
+                                font_size: 60.0,
+                                color: TEXT_COLOR,
+                                font: font.0.clone(),
+                            },
+                        )
+                        .with_style(Style {
+                            margin: UiRect::all(Val::Px(50.0)),
+                            ..default()
+                        }),
+                    );
+                    parent.spawn(
+                        TextBundle::from_section(
+                            format!("Lives Remaining: {}", random_progress.lives),
+                            TextStyle {
+                                font_size: 30.0,
+                                color: TEXT_COLOR,
+                                font: font.0.clone(),
+                            },
+                        )
+                        .with_style(Style {
+                            margin: UiRect::all(Val::Px(20.0)),
+                            ..default()
+                        }),
+                    );
+                }
+            } else {
+                parent.spawn(
+                    TextBundle::from_section(
+                        "You lost...",
+                        TextStyle {
+                            font_size: 60.0,
+                            color: TEXT_COLOR,
+                            font: font.0.clone(),
+                        },
+                    )
+                    .with_style(Style {
+                        margin: UiRect::all(Val::Px(50.0)),
+                        ..default()
+                    }),
+                );
+            }
+
             parent.spawn(
                 TextBundle::from_section(
                     if playthrough.lost_chest {
@@ -119,36 +191,43 @@ fn setup(mut commands: Commands, playthrough: Res<Playthrough>, font: Res<FontHa
                             parent
                                 .spawn(TextBundle::from_section("Menu", button_text_style.clone()));
                         });
-                    parent
-                        .spawn((
-                            ButtonBundle {
-                                style: button_style.clone(),
-                                background_color: NORMAL_BUTTON.into(),
-                                border_color: BorderColor(HOVERED_BUTTON),
-                                ..default()
-                            },
-                            ButtonAction::Retry,
-                        ))
-                        .with_children(|parent| {
-                            parent.spawn(TextBundle::from_section(
-                                "Retry",
-                                button_text_style.clone(),
-                            ));
-                        });
-                    parent
-                        .spawn((
-                            ButtonBundle {
-                                style: button_style.clone(),
-                                background_color: NORMAL_BUTTON.into(),
-                                border_color: BorderColor(HOVERED_BUTTON),
-                                ..default()
-                            },
-                            ButtonAction::Edit,
-                        ))
-                        .with_children(|parent| {
-                            parent
-                                .spawn(TextBundle::from_section("Edit", button_text_style.clone()));
-                        });
+
+                    // No retry button to avoid cheating by stacking points with the
+                    // same level
+                    if current_tab.0 != 7 || random_progress.lives > 0 {
+                        parent
+                            .spawn((
+                                ButtonBundle {
+                                    style: button_style.clone(),
+                                    background_color: NORMAL_BUTTON.into(),
+                                    border_color: BorderColor(HOVERED_BUTTON),
+                                    ..default()
+                                },
+                                ButtonAction::Retry,
+                            ))
+                            .with_children(|parent| {
+                                parent.spawn(TextBundle::from_section(
+                                    "Retry",
+                                    button_text_style.clone(),
+                                ));
+                            });
+                        parent
+                            .spawn((
+                                ButtonBundle {
+                                    style: button_style.clone(),
+                                    background_color: NORMAL_BUTTON.into(),
+                                    border_color: BorderColor(HOVERED_BUTTON),
+                                    ..default()
+                                },
+                                ButtonAction::Edit,
+                            ))
+                            .with_children(|parent| {
+                                parent.spawn(TextBundle::from_section(
+                                    "Edit",
+                                    button_text_style.clone(),
+                                ));
+                            });
+                    }
                 });
         });
 }

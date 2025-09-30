@@ -1,9 +1,14 @@
 use bevy::prelude::*;
-use bevy_ecs_ldtk::assets::LdtkProject;
+use bevy_ecs_ldtk::{assets::LdtkProject, LdtkWorldBundle};
+
+use bevy::utils::HashSet;
+use bevy_ecs_ldtk::LevelSelection;
+use rand::Rng;
 
 use crate::{
-    audio::AudioEvent, CurrentLevel, CurrentTab, EnabledColliders, FontHandle, GameMode,
-    Playthrough, Progression, HOVERED_BUTTON, LEVELS, NORMAL_BUTTON, PRESSED_BUTTON, TEXT_COLOR,
+    audio::AudioEvent, CurrentLevel, CurrentTab, EnabledColliders, FontHandle, GameConfig,
+    GameKind, GameMode, LdtkHandle, Playthrough, Progression, RandomProgressState, HOVERED_BUTTON,
+    LEVELS, NORMAL_BUTTON, PRESSED_BUTTON, TEXT_COLOR,
 };
 
 pub struct WonPlugin;
@@ -34,6 +39,7 @@ fn setup(
     asset_server: Res<AssetServer>,
     current_tab: Res<CurrentTab>,
     playthrough: Res<Playthrough>,
+    mut random_progress: ResMut<RandomProgressState>,
 ) {
     let completion_time = playthrough.timer.elapsed_secs();
     let colliders_used = colliders.coords.len();
@@ -41,12 +47,15 @@ fn setup(
 
     let score = playthrough.calculate_score(colliders_used as u32);
 
-    progression.tabs[current_tab.0][level.0] = LEVELS[level.0]
-        .thresholds
-        .binary_search(&colliders.coords.len())
-        .unwrap_or_else(|err| err)
-        .min(progression.tabs[current_tab.0][level.0]);
-
+    if current_tab.0 == 7 {
+        random_progress.add_score(score);
+    } else {
+        progression.tabs[current_tab.0][level.0] = LEVELS[level.0]
+            .thresholds
+            .binary_search(&colliders.coords.len())
+            .unwrap_or_else(|err| err)
+            .min(progression.tabs[current_tab.0][level.0]);
+    }
     // Common style for all buttons on the screen
     let button_style = Style {
         width: Val::Px(250.0),
@@ -124,6 +133,26 @@ fn setup(
                     ..default()
                 }),
             );
+
+            if current_tab.0 == 7 {
+                parent.spawn(
+                    TextBundle::from_section(
+                        format!(
+                            "Lives: {} Intermediate Score: {}",
+                            random_progress.lives, random_progress.intermediate_score
+                        ),
+                        TextStyle {
+                            font_size: 25.0,
+                            color: TEXT_COLOR,
+                            font: font.0.clone(),
+                        },
+                    )
+                    .with_style(Style {
+                        margin: UiRect::all(Val::Px(10.0)),
+                        ..default()
+                    }),
+                );
+            }
 
             parent.spawn(
                 TextBundle::from_section(
@@ -263,22 +292,46 @@ fn setup(
                             parent
                                 .spawn(TextBundle::from_section("Menu", button_text_style.clone()));
                         });
-                    parent
-                        .spawn((
-                            ButtonBundle {
-                                style: button_style.clone(),
-                                background_color: NORMAL_BUTTON.into(),
-                                border_color: BorderColor(HOVERED_BUTTON),
-                                ..default()
-                            },
-                            ButtonAction::Retry,
-                        ))
-                        .with_children(|parent| {
-                            parent.spawn(TextBundle::from_section(
-                                "Retry",
-                                button_text_style.clone(),
-                            ));
-                        });
+                    // No retry button to avoid cheating by stacking points with the
+                    // same level
+                    if current_tab.0 != 7 {
+                        parent
+                            .spawn((
+                                ButtonBundle {
+                                    style: button_style.clone(),
+                                    background_color: NORMAL_BUTTON.into(),
+                                    border_color: BorderColor(HOVERED_BUTTON),
+                                    ..default()
+                                },
+                                ButtonAction::Retry,
+                            ))
+                            .with_children(|parent| {
+                                parent.spawn(TextBundle::from_section(
+                                    "Retry",
+                                    button_text_style.clone(),
+                                ));
+                            });
+                    }
+
+                    // Add Continue button for RandomProgress variant
+                    if current_tab.0 == 7 {
+                        parent
+                            .spawn((
+                                ButtonBundle {
+                                    style: button_style.clone(),
+                                    background_color: NORMAL_BUTTON.into(),
+                                    border_color: BorderColor(HOVERED_BUTTON),
+                                    ..default()
+                                },
+                                ButtonAction::Continue,
+                            ))
+                            .with_children(|parent| {
+                                parent.spawn(TextBundle::from_section(
+                                    "Continue",
+                                    button_text_style.clone(),
+                                ));
+                            });
+                    }
                 });
         });
 }
@@ -287,6 +340,7 @@ fn setup(
 enum ButtonAction {
     Menu,
     Retry,
+    Continue,
 }
 
 #[allow(clippy::type_complexity)]
@@ -299,6 +353,11 @@ fn button_system(
     mut next_state: ResMut<NextState<GameMode>>,
     world_query: Query<Entity, With<Handle<LdtkProject>>>,
     mut audio_events: EventWriter<AudioEvent>,
+    world: Res<LdtkHandle>,
+    game_kind: Res<State<GameKind>>,
+    current_tab: Res<CurrentTab>,
+    mut game_config: ResMut<GameConfig>,
+    mut random_progress: ResMut<RandomProgressState>,
 ) {
     for (interaction, mut color, button) in &mut interaction_query {
         *color = match *interaction {
@@ -309,6 +368,33 @@ fn button_system(
                     ButtonAction::Menu => {
                         commands.entity(world_query.single()).despawn_recursive();
                         next_state.set(GameMode::Menu);
+                    }
+                    ButtonAction::Continue => {
+                        if current_tab.0 == 7 {
+                            let random_level = random_progress.rng.random_range(0..LEVELS.len());
+                            let random_config = GameConfig::random(&mut random_progress.rng);
+                            random_progress.advance_rng();
+
+                            let mut coords = HashSet::new();
+                            for starter in &LEVELS[random_level].start_colliders {
+                                coords.insert(*starter);
+                            }
+                            commands.insert_resource(EnabledColliders { coords });
+                            commands.insert_resource(LevelSelection::index(random_level));
+                            commands.insert_resource(CurrentLevel(0));
+                            *game_config = random_config;
+
+                            commands.entity(world_query.single()).despawn_recursive();
+                            commands.spawn(LdtkWorldBundle {
+                                ldtk_handle: world.0.clone(),
+                                ..Default::default()
+                            });
+
+                            match game_kind.get() {
+                                GameKind::Platformer => next_state.set(GameMode::Play),
+                                GameKind::Puzzle => next_state.set(GameMode::Edit),
+                            };
+                        }
                     }
                 }
                 PRESSED_BUTTON.into()
