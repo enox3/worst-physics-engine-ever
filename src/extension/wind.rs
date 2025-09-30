@@ -157,7 +157,7 @@ pub fn wind_effect_system(
                 .translation
                 .distance(player_transform.translation);
 
-            if distance < 60.0 {
+            if distance < 30.0 {
                 let wind_impulse =
                     wind_entity.direction * wind_entity.strength * wind_entity.speed * 100.0;
                 player_velocity.linvel.x += wind_impulse;
@@ -167,7 +167,6 @@ pub fn wind_effect_system(
                     timer: 0.0,
                     duration: game_config.wind.clone().unwrap_or_default().cooldown / 10.,
                 });
-                // Only apply one wind effect
                 break;
             }
         }
